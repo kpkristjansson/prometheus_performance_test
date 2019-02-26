@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: avalanche
+  labels:
+    name: avalanche
+    role: avalanche
+spec:
+  replicas: 5
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      role: avalanche
+  template:
+    metadata:
+      labels:
+        prometheus: scrape
+        name: avalanche
+        role: avalanche
+    spec:
+      containers:
+        - name: avalanche
+          image: quay.io/freshtracks.io/avalanche
+          imagePullPolicy: IfNotPresent
+          args:
+            - --metric-count=1000
+            - --series-count=25
+            - --port=9001
+          ports:
+            - containerPort: 9001
+              protocol: TCP
+              name: metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: avalanche
+  labels:
+    name: avalanche
+    role: avalanche
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 9001
+  selector:
+    role: avalanche
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: avalanche
+  labels:
+    prometheus: scrape
+  namespace: monitoring
+spec:
+  endpoints:
+    - interval: 15s
+      port: http
+      path: /metrics
+  namespaceSelector:
+    matchNames:
+      - monitoring
+  selector:
+    matchLabels:
+      role: avalanche
