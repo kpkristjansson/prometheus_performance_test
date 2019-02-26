@@ -56,7 +56,7 @@ metadata:
   name: avalanche
   labels:
     prometheus: scrape
-  namespace: monitoring
+  namespace: default
 spec:
   endpoints:
     - interval: 15s
@@ -64,7 +64,7 @@ spec:
       path: /metrics
   namespaceSelector:
     matchNames:
-      - monitoring
+      - default
   selector:
     matchLabels:
       role: avalanche
